@@ -432,7 +432,7 @@
 
       if (state.extraDanger) {
         return {
-          emoji: "☠️☠️☠️",
+          emoji: "🌩️🌩️🌩️",
           title: "지갑 초비상!",
           description:
             "위험 경고 후에도 소비했어요! " +
@@ -443,7 +443,7 @@
 
       if (remaining <= dangerLimit) {
         return {
-          emoji: "☠️",
+          emoji: "🌩️",
           title: "지갑 위험!",
           description:
             "이대로라면 용돈이 부족할 수 있어요. " +

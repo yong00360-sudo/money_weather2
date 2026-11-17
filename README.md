@@ -1,0 +1,690 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>머니 날씨 | 내 지갑의 일기예보</title>
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Malgun Gothic", Arial, sans-serif;
+      background: #f4faff;
+      color: #25344b;
+    }
+
+    header {
+      background: linear-gradient(120deg, #ffe66d, #9ce4ff);
+      text-align: center;
+      padding: 40px 16px;
+    }
+
+    header h1 {
+      font-size: 36px;
+      margin: 0 0 10px;
+    }
+
+    header p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    main {
+      max-width: 960px;
+      margin: 25px auto;
+      padding: 0 16px 35px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 22px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 5px 18px #263e5912;
+    }
+
+    h2 { margin-top: 0; font-size: 22px; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input {
+      width: 100%;
+      padding: 13px;
+      border: 2px solid #dce9f2;
+      border-radius: 12px;
+      font-size: 16px;
+      background: #fbfdff;
+    }
+
+    input:focus {
+      outline: none;
+      border-color: #55bce9;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #ffdc55;
+      color: #26344a;
+    }
+
+    button:hover { background: #ffc933; }
+
+    .secondary { background: #bdeaff; }
+    .secondary:hover { background: #96dcfa; }
+
+    .danger { background: #ffe0e0; }
+    .danger:hover { background: #ffcaca; }
+
+    .buttons {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 20px;
+    }
+
+    .weather {
+      text-align: center;
+      background: linear-gradient(160deg, #e1f7ff, #fff7c9);
+    }
+
+    .emoji {
+      font-size: clamp(55px, 10vw, 90px);
+      margin: 15px 0;
+      overflow-wrap: anywhere;
+    }
+
+    .status {
+      font-size: 25px;
+      font-weight: bold;
+    }
+
+    .description {
+      line-height: 1.7;
+      color: #526276;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-top: 25px;
+    }
+
+    .stat {
+      background: #ffffffb8;
+      border-radius: 15px;
+      padding: 16px 8px;
+      text-align: center;
+    }
+
+    .stat small {
+      display: block;
+      margin-bottom: 9px;
+      color: #526276;
+    }
+
+    .stat strong {
+      font-size: 19px;
+      overflow-wrap: anywhere;
+    }
+
+    .progress {
+      height: 16px;
+      background: #e8edf2;
+      border-radius: 20px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+
+    .bar {
+      height: 100%;
+      width: 0%;
+      background: #65c9ee;
+      transition: width .4s;
+    }
+
+    .message {
+      min-height: 22px;
+      color: #c0392b;
+      font-size: 14px;
+      margin-top: 12px;
+    }
+
+    .history {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .history li {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 13px 0;
+      border-bottom: 1px solid #edf1f5;
+    }
+
+    .history span { overflow-wrap: anywhere; }
+
+    .muted { color: #687789; }
+
+    footer {
+      text-align: center;
+      padding: 20px;
+      color: #687789;
+      font-size: 13px;
+    }
+
+    @media (max-width: 600px) {
+      header h1 { font-size: 29px; }
+      .grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr; }
+      .card { padding: 20px; }
+      button { width: 100%; }
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>☀️ 머니 날씨</h1>
+    <p>내 지갑의 미래를 미리 확인하자!</p>
+    <p>오늘은 맑음일까, 지갑 비상일까?</p>
+  </header>
+
+  <main>
+    <section class="card">
+      <h2>💰 내 용돈 정보</h2>
+
+      <div class="grid">
+        <div>
+          <label for="balance">현재 계좌 잔액 (원)</label>
+          <input type="number" id="balance"
+                 min="0" step="1" placeholder="예: 50000">
+        </div>
+
+        <div>
+          <label for="expected">다음 용돈 전 예상 지출 (원)</label>
+          <input type="number" id="expected"
+                 min="0" step="1" placeholder="예: 30000">
+        </div>
+
+        <div>
+          <label for="allowanceDate">다음 용돈 날짜</label>
+          <input type="date" id="allowanceDate">
+        </div>
+
+        <div>
+          <label for="allowanceAmount">다음 용돈 금액 (선택)</label>
+          <input type="number" id="allowanceAmount"
+                 min="0" step="1" placeholder="예: 100000">
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button onclick="calculate()">🌤️ 내 머니 날씨 확인</button>
+        <button class="secondary" onclick="resetAll()">
+          🔄 초기화
+        </button>
+      </div>
+
+      <div class="message" id="inputMessage" role="alert"></div>
+    </section>
+
+    <section class="card weather" aria-live="polite">
+      <h2>🌈 나의 머니 날씨 예보</h2>
+      <div class="emoji" id="weatherEmoji">🌤️</div>
+      <div class="status" id="weatherStatus">
+        아직 예보 전이에요!
+      </div>
+      <p class="description" id="weatherDescription">
+        정보를 입력하면 미래의 지갑 날씨를 알려드려요.
+      </p>
+
+      <div class="stats">
+        <div class="stat">
+          <small>예상 남은 돈</small>
+          <strong id="remaining">-</strong>
+        </div>
+        <div class="stat">
+          <small>용돈까지 남은 날</small>
+          <strong id="daysLeft">-</strong>
+        </div>
+        <div class="stat">
+          <small>하루 사용 가능 금액</small>
+          <strong id="dailyBudget">-</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>📊 예상 지출 비율</h2>
+      <p class="muted">
+        현재 잔액 중 예상 지출과 추가 지출이 차지하는 비율
+      </p>
+      <div class="progress">
+        <div class="bar" id="progressBar"></div>
+      </div>
+      <strong id="progressText">0%</strong>
+    </section>
+
+    <section class="card">
+      <h2>🛍️ 돈을 더 썼나요?</h2>
+      <p class="description">
+        실제로 돈을 썼다면 기록해 보세요.
+        잔액과 머니 날씨가 즉시 바뀝니다!
+      </p>
+
+      <div class="grid">
+        <div>
+          <label for="spendName">지출 내용</label>
+          <input type="text" id="spendName"
+                 maxlength="40" placeholder="예: 떡볶이">
+        </div>
+        <div>
+          <label for="spendAmount">지출 금액 (원)</label>
+          <input type="number" id="spendAmount"
+                 min="1" step="1" placeholder="예: 5000">
+        </div>
+      </div>
+
+      <div class="buttons">
+        <button onclick="addSpending()">➖ 지출 기록하기</button>
+      </div>
+      <div class="message" id="spendMessage" role="alert"></div>
+    </section>
+
+    <section class="card">
+      <h2>🧾 나의 지출 기록</h2>
+      <ul class="history" id="historyList">
+        <li class="muted">아직 지출 기록이 없어요.</li>
+      </ul>
+    </section>
+
+    <section class="card">
+      <h2>💡 머니 날씨 사용 팁</h2>
+      <p class="description">
+        ☀️ 맑음: 예상 지출 후에도 돈이 넉넉해요.<br>
+        ☁️ 흐림: 지출을 조금 줄이면 좋아요.<br>
+        🌩️ 위험: 예상 지출 후 남는 돈이 거의 없어요.<br>
+        🌩️🌩️🌩️ 초비상: 위험 상태에서 더 소비했어요!
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    💛 머니 날씨 | 학생을 위한 스마트 용돈 관리 서비스
+    <p>실제 은행 계좌와 연결되지 않는 예산 관리 체험 서비스입니다.</p>
+  </footer>
+
+  <script>
+    const STORAGE_KEY = "moneyWeather_v1";
+
+    let state = {
+      initialBalance: 0,
+      balance: 0,
+      expected: 0,
+      allowanceDate: "",
+      allowanceAmount: 0,
+      spending: [],
+      extraDanger: false,
+      started: false
+    };
+
+    const $ = id => document.getElementById(id);
+
+    function formatMoney(value) {
+      return Math.round(value).toLocaleString("ko-KR") + "원";
+    }
+
+    function getToday() {
+      const now = new Date();
+      return new Date(
+        now.getFullYear(), now.getMonth(), now.getDate()
+      );
+    }
+
+    function parseDate(value) {
+      const parts = value.split("-").map(Number);
+      return new Date(parts[0], parts[1] - 1, parts[2]);
+    }
+
+    function getDaysLeft() {
+      const target = parseDate(state.allowanceDate);
+      const diff = target.getTime() - getToday().getTime();
+      return Math.round(diff / 86400000);
+    }
+
+    function validMoney(value, allowZero = true) {
+      const n = Number(value);
+      if (value.trim() === "" || !Number.isSafeInteger(n)) {
+        return null;
+      }
+      if (allowZero ? n < 0 : n <= 0) return null;
+      return n;
+    }
+
+    function save() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        console.warn("저장할 수 없습니다.", error);
+      }
+    }
+
+    function load() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (!saved || saved.started !== true) return;
+
+        if (
+          !Number.isSafeInteger(saved.initialBalance) ||
+          !Number.isSafeInteger(saved.balance) ||
+          !Number.isSafeInteger(saved.expected) ||
+          saved.initialBalance < 0 ||
+          saved.balance < 0 ||
+          saved.expected < 0 ||
+          typeof saved.allowanceDate !== "string" ||
+          !/^\d{4}-\d{2}-\d{2}$/.test(saved.allowanceDate) ||
+          !Array.isArray(saved.spending)
+        ) return;
+
+        state = {
+          ...state,
+          ...saved,
+          spending: saved.spending.slice(0, 100),
+          extraDanger: saved.extraDanger === true
+        };
+
+        $("balance").value = state.balance;
+        $("expected").value = state.expected;
+        $("allowanceDate").value = state.allowanceDate;
+        $("allowanceAmount").value = state.allowanceAmount;
+        render();
+      } catch (error) {
+        console.warn("저장된 정보를 읽지 못했습니다.", error);
+      }
+    }
+
+    function getWeather() {
+      const remaining = state.balance - state.expected;
+
+      // 예상 지출 후 남는 돈이 최초 잔액의
+      // 10% 이하이면 위험으로 판단합니다.
+      const dangerLimit = state.initialBalance * 0.1;
+
+      if (state.extraDanger) {
+        return {
+          emoji: "☠️☠️☠️",
+          title: "지갑 초비상!",
+          description:
+            "위험 경고 후에도 소비했어요! " +
+            "다음 용돈까지 꼭 필요한 지출만 해요.",
+          color: "#ff7777"
+        };
+      }
+
+      if (remaining <= dangerLimit) {
+        return {
+          emoji: "☠️",
+          title: "지갑 위험!",
+          description:
+            "이대로라면 용돈이 부족할 수 있어요. " +
+            "추가 소비를 조심하세요!",
+          color: "#ff9a67"
+        };
+      }
+
+      if (remaining <= state.initialBalance * 0.4) {
+        return {
+          emoji: "☁️",
+          title: "머니 날씨 흐림",
+          description:
+            "돈이 조금씩 줄어들고 있어요. " +
+            "꼭 필요한 소비인지 생각해 보세요.",
+          color: "#ffcb60"
+        };
+      }
+
+      return {
+        emoji: "☀️",
+        title: "머니 날씨 맑음!",
+        description:
+          "예상 지출 후에도 여유가 있어요! " +
+          "계획적으로 소비하면 더 좋아요.",
+        color: "#65c9ee"
+      };
+    }
+
+    function calculate() {
+      const balance = validMoney($("balance").value);
+      const expected = validMoney($("expected").value);
+      const date = $("allowanceDate").value;
+      const allowanceInput = $("allowanceAmount").value;
+      const allowance = allowanceInput.trim() === ""
+        ? 0 : validMoney(allowanceInput);
+
+      $("inputMessage").textContent = "";
+
+      if (balance === null || expected === null) {
+        $("inputMessage").textContent =
+          "잔액과 예상 지출에 0 이상의 정수를 입력해 주세요.";
+        return;
+      }
+
+      if (allowance === null) {
+        $("inputMessage").textContent =
+          "다음 용돈 금액을 올바르게 입력해 주세요.";
+        return;
+      }
+
+      if (!date) {
+        $("inputMessage").textContent =
+          "다음 용돈 날짜를 선택해 주세요.";
+        return;
+      }
+
+      const target = parseDate(date);
+      if (
+        Number.isNaN(target.getTime()) ||
+        target < getToday()
+      ) {
+        $("inputMessage").textContent =
+          "다음 용돈 날짜는 오늘 이후로 선택해 주세요.";
+        return;
+      }
+
+      // 정보 수정 시 새 예산 계획으로 시작합니다.
+      state = {
+        initialBalance: balance,
+        balance: balance,
+        expected: expected,
+        allowanceDate: date,
+        allowanceAmount: allowance,
+        spending: [],
+        extraDanger: false,
+        started: true
+      };
+
+      save();
+      render();
+      $("inputMessage").textContent =
+        "새 머니 날씨 예보가 완성됐어요!";
+    }
+
+    function addSpending() {
+      $("spendMessage").textContent = "";
+
+      if (!state.started) {
+        $("spendMessage").textContent =
+          "먼저 머니 날씨를 계산해 주세요.";
+        return;
+      }
+
+      if (getDaysLeft() < 0) {
+        $("spendMessage").textContent =
+          "용돈 날짜가 지났어요. 새 예산을 입력해 주세요.";
+        return;
+      }
+
+      const name = $("spendName").value.trim();
+      const amount = validMoney($("spendAmount").value, false);
+
+      if (!name) {
+        $("spendMessage").textContent =
+          "무엇을 샀는지 입력해 주세요.";
+        return;
+      }
+
+      if (amount === null) {
+        $("spendMessage").textContent =
+          "지출 금액은 1원 이상의 정수로 입력해 주세요.";
+        return;
+      }
+
+      if (amount > state.balance) {
+        $("spendMessage").textContent =
+          "현재 잔액보다 많은 금액은 지출할 수 없어요.";
+        return;
+      }
+
+      // 소비 직전 이미 위험한 상태였는지 확인합니다.
+      const wasDanger =
+        state.balance - state.expected <=
+        state.initialBalance * 0.1;
+
+      state.balance -= amount;
+
+      if (wasDanger) {
+        state.extraDanger = true;
+      }
+
+      state.spending.unshift({
+        name: name,
+        amount: amount,
+        time: new Date().toLocaleString("ko-KR")
+      });
+
+      state.spending = state.spending.slice(0, 100);
+
+      $("balance").value = state.balance;
+      $("spendName").value = "";
+      $("spendAmount").value = "";
+
+      save();
+      render();
+
+      $("spendMessage").textContent =
+        formatMoney(amount) + " 지출을 기록했어요.";
+    }
+
+    function render() {
+      if (!state.started) return;
+
+      const remaining = state.balance - state.expected;
+      const days = getDaysLeft();
+      const weather = getWeather();
+
+      $("weatherEmoji").textContent = weather.emoji;
+      $("weatherStatus").textContent = weather.title;
+      $("weatherDescription").textContent =
+        weather.description;
+
+      $("remaining").textContent = formatMoney(remaining);
+      $("daysLeft").textContent =
+        days >= 0 ? days + "일" : "날짜 지남";
+
+      // 오늘부터 용돈 전날까지의 하루 예산입니다.
+      const budgetDays = Math.max(1, days);
+      const daily = Math.max(0, remaining) / budgetDays;
+
+      $("dailyBudget").textContent =
+        days >= 0 ? formatMoney(daily) : "-";
+
+      // 최초 잔액 대비 예상 지출 + 실제 추가 지출
+      const actualSpent =
+        state.initialBalance - state.balance;
+      const plannedSpending =
+        state.expected + actualSpent;
+
+      const percentage = state.initialBalance > 0
+        ? plannedSpending / state.initialBalance * 100
+        : plannedSpending > 0 ? 100 : 0;
+
+      $("progressBar").style.width =
+        Math.min(100, percentage) + "%";
+      $("progressBar").style.background = weather.color;
+      $("progressText").textContent =
+        percentage.toFixed(1) + "%";
+
+      renderHistory();
+    }
+
+    function renderHistory() {
+      const list = $("historyList");
+      list.replaceChildren();
+
+      if (state.spending.length === 0) {
+        const li = document.createElement("li");
+        li.className = "muted";
+        li.textContent = "아직 지출 기록이 없어요.";
+        list.appendChild(li);
+        return;
+      }
+
+      state.spending.forEach(item => {
+        const li = document.createElement("li");
+        const info = document.createElement("span");
+        const money = document.createElement("strong");
+
+        info.textContent = item.name + " · " + item.time;
+        money.textContent = "-" + formatMoney(item.amount);
+
+        li.append(info, money);
+        list.appendChild(li);
+      });
+    }
+
+    function resetAll() {
+      if (!confirm("모든 예산과 지출 기록을 삭제할까요?")) {
+        return;
+      }
+
+      localStorage.removeItem(STORAGE_KEY);
+      location.reload();
+    }
+
+    // 최초 실행 시 날짜 기본값을 7일 뒤로 설정합니다.
+    const defaultDate = getToday();
+    defaultDate.setDate(defaultDate.getDate() + 7);
+
+    const year = defaultDate.getFullYear();
+    const month = String(defaultDate.getMonth() + 1)
+      .padStart(2, "0");
+    const day = String(defaultDate.getDate())
+      .padStart(2, "0");
+
+    $("allowanceDate").value =
+      year + "-" + month + "-" + day;
+
+    load();
+  </script>
+</body>
+</html>
